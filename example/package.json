@@ -1,0 +1,16 @@
+{
+  "name": "ndm-schema-generator-example",
+  "version": "1.0.0",
+  "description": "Example use for the ndm-schema-generator",
+  "main": "example.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ben Botto",
+  "license": "ISC",
+  "dependencies": {
+    "mysql": "^2.10.2",
+    "ndm-schema-generator": "^1.0.3",
+    "node-data-mapper": "^1.0.11"
+  }
+}
