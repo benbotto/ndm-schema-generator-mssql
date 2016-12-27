@@ -1,5 +1,6 @@
 'use strict';
 
+const deferred     = require('deferred');
 const mssql        = require('mssql');
 const ndm          = require('node-data-mapper');
 const Generator    = require('ndm-schema-generator').Generator;
@@ -10,13 +11,14 @@ const settings     = {
   server   : 'localhost',
   database : 'bike_shop'
 };
+const conn         = deferred(mssql.connect(settings));
 
-mssql
-  .connect(settings)
+conn
   .then(conn => new Generator(conn)
     .generateSchema('cpuc_stage', tableCB, columnCB))
   .then(schema => console.log(util.inspect(schema, {depth: null})))
-  .catch(console.error);
+  .catch(console.error)
+  .finally(() => mssql.close());
 
 /**
  * The table alias removes any underscores and uppercases the proceeding

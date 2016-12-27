@@ -72,8 +72,7 @@ class Generator {
         const schema = new ndm.DataMapper().serialize(res, tblSchema);
 
         return schema;
-      })
-      .finally(() => this._conn.close());
+      });
   }
 }
 
