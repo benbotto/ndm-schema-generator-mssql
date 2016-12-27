@@ -6,10 +6,10 @@ const ndm          = require('node-data-mapper');
 const Generator    = require('../Generator');
 const util         = require('util');
 const settings     = {
-  user     : 'cpuc-pda-user',
-  password : 'U!2lVf$AvelTS*&Q',
-  server   : 'benningfieldgroup.com',
-  database : 'cpuc_stage'
+  user     : 'bikeshop-user',
+  password : 'secret',
+  server   : 'localhost',
+  database : 'bike_shop'
 };
 const conn = mssql.connect(settings);
 
