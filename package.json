@@ -1,6 +1,6 @@
 {
   "name": "ndm-schema-generator-mssql",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tool to generate a database schema object for use with the node-data-mapper project.",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "author": "Ben Botto",
   "license": "ISC",
   "dependencies": {
+    "deferred": "^0.7.5",
     "mssql": "^3.3.0",
     "node-data-mapper": "^1.0.19"
   }

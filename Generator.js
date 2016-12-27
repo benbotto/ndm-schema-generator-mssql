@@ -1,13 +1,15 @@
 'use strict';
 
-const ndm   = require('node-data-mapper');
-const mssql = require('mssql');
+const ndm      = require('node-data-mapper');
+const mssql    = require('mssql');
+const deferred = require('deferred');
 
 class Generator {
   /**
    * Initialize the schema generator.
    * @param {Connection} conn - A connection to the MSSQL database with
-   * permission to read from the INFORMATION_SCHEMA table.
+   * permission to read from the INFORMATION_SCHEMA table (the user will need
+   * VIEW DEFINITION granted).
    */
   constructor(conn) {
     this._conn = conn;
@@ -35,8 +37,7 @@ class Generator {
               CASE
                 WHEN pri_ccu.COLUMN_NAME IS NULL THEN 0
                 ELSE 1
-              END AS isPrimary,
-              '-------OTHER---------', c.*
+              END AS isPrimary
       FROM    INFORMATION_SCHEMA.TABLES t
       INNER JOIN INFORMATION_SCHEMA.COLUMNS c ON t.TABLE_NAME = c.TABLE_NAME
         AND t.TABLE_SCHEMA = c.TABLE_SCHEMA
@@ -53,18 +54,26 @@ class Generator {
     const request = new mssql.Request();
     request.input('dbName', mssql.NVarChar, dbName);
 
-    request
-      .query(sql)
-      .then(res => {
-        console.log('Success');
-        console.log(res);
-        conn.close();
+    // Run the query and serialize the results.
+    // Note: deferred is used as the promise library.  Since mssql uses native
+    // promises, the query executation is wrapped.
+    return deferred(request.query(sql))
+      .then(function(res) {
+        // Serialize the result to a normalized object.
+        const tblSchema = new ndm.Schema('TABLE_NAME', 'name')
+          .addProperty('TABLE_SCHEMA', 'schema')
+          .addSchema('columns', new ndm.Schema('COLUMN_NAME', 'name')
+            .addProperty('DATA_TYPE', 'dataType')
+            .addProperty('IS_NULLABLE', 'isNullable', ndm.bitConverter.onRetrieve)
+            .addProperty('CHARACTER_MAXIMUM_LENGTH', 'maxLength')
+            .addProperty('COLUMN_DEFAULT', 'defaultValue')
+            .addProperty('isPrimary', 'isPrimary', ndm.bitConverter.onRetrieve));
+
+        const schema = new ndm.DataMapper().serialize(res, tblSchema);
+
+        return schema;
       })
-      .catch(err => {
-        console.error('Error executing query.');
-        console.error(err);
-        conn.close();
-      });
+      .finally(() => this._conn.close());
   }
 }
 
