@@ -1,10 +1,10 @@
 'use strict';
 
-let db = {
+const db = {
   name: 'INFORMATION_SCHEMA',
   tables: [
     {
-      name: 'tables',
+      name: 'TABLES',
       columns: [
         {
           name: 'TABLE_NAME',
@@ -12,12 +12,16 @@ let db = {
           isPrimary: true
         },
         {
-          name: 'TABLE_SCHEMA'
+          name: 'TABLE_SCHEMA',
+          alias: 'schema'
+        }
+        {
+          name: 'TABLE_CATALOG'
         }
       ]
     },
     {
-      name: 'columns',
+      name: 'COLUMNS',
       columns: [
         {
           name: 'COLUMN_NAME',
@@ -28,15 +32,11 @@ let db = {
           name: 'TABLE_NAME'
         },
         {
-          name: 'TABLE_SCHEMA'
+          name: 'TABLE_CATALOG'
         },
         {
           name: 'DATA_TYPE',
           alias: 'dataType'
-        },
-        {
-          name: 'COLUMN_TYPE',
-          alias: 'columnType'
         },
         {
           name: 'CHARACTER_MAXIMUM_LENGTH',

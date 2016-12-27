@@ -1,13 +1,16 @@
 'use strict';
 
+const ndm   = require('node-data-mapper');
+const mssql = require('mssql');
+
 class Generator {
   /**
    * Initialize the schema generator.
-   * @param infoSchemaDC A DataContext instance with permission to read
-   *        from the INFORMATION_SCHEMA table.
+   * @param {Connection} conn - A connection to the MSSQL database with
+   * permission to read from the INFORMATION_SCHEMA table.
    */
-  constructor(infoSchemaDC) {
-    this._infoSchemaDC = infoSchemaDC;
+  constructor(conn) {
+    this._conn = conn;
   }
 
   /**
@@ -25,43 +28,43 @@ class Generator {
     tableCB  = tableCB  || function() {};
     columnCB = columnCB || function() {};
 
-    // Get all the tables and columns from the information_schema db.
-    let query = this._infoSchemaDC
-      .from('tables')
-      .innerJoin({
-          table:  'columns',
-          parent: 'tables',
-          on: {
-            $and: [
-              {$eq: {'tables.TABLE_NAME':'columns.TABLE_NAME'}},
-              {$eq: {'tables.TABLE_SCHEMA':'columns.TABLE_SCHEMA'}}
-            ]
-          }
-        })
-      .where({$eq: {'tables.TABLE_SCHEMA':':schema'}}, {schema: dbName})
-      .select('tables.TABLE_NAME', 'columns.COLUMN_NAME',
-        'columns.DATA_TYPE', 'columns.COLUMN_TYPE',
-        'columns.IS_NULLABLE', 'columns.CHARACTER_MAXIMUM_LENGTH',
-        'columns.COLUMN_KEY', 'columns.COLUMN_DEFAULT')
-      .orderBy('tables.TABLE_NAME', 'columns.COLUMN_NAME');
+    const sql = `
+      SELECT  t.TABLE_NAME, t.TABLE_SCHEMA,
+              c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE,
+              c.CHARACTER_MAXIMUM_LENGTH, c.COLUMN_DEFAULT,
+              CASE
+                WHEN pri_ccu.COLUMN_NAME IS NULL THEN 0
+                ELSE 1
+              END AS isPrimary,
+              '-------OTHER---------', c.*
+      FROM    INFORMATION_SCHEMA.TABLES t
+      INNER JOIN INFORMATION_SCHEMA.COLUMNS c ON t.TABLE_NAME = c.TABLE_NAME
+        AND t.TABLE_SCHEMA = c.TABLE_SCHEMA
+      LEFT OUTER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS pri_tc ON t.TABLE_NAME = pri_tc.TABLE_NAME
+        AND t.TABLE_CATALOG = pri_tc.TABLE_CATALOG
+        AND pri_tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+      LEFT OUTER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE pri_ccu ON t.TABLE_NAME = pri_ccu.TABLE_NAME
+        AND t.TABLE_CATALOG = pri_ccu.TABLE_CATALOG
+        AND pri_tc.CONSTRAINT_NAME = pri_ccu.CONSTRAINT_NAME
+        AND pri_ccu.COLUMN_NAME = c.COLUMN_NAME
+      WHERE   t.TABLE_CATALOG = @dbName
+        AND   t.TABLE_TYPE = 'BASE TABLE'
+      ORDER BY t.TABLE_NAME`;
+    const request = new mssql.Request();
+    request.input('dbName', mssql.NVarChar, dbName);
 
-    return query
-      .execute()
-      .then(function(res) {
-        // Fire the table and column callbacks.
-        res.tables.forEach(function(table) {
-          tableCB(table);
-          table.columns.forEach((col) => columnCB(col, table));
-        });
-
-        let database = {
-          name:   dbName,
-          tables: res.tables
-        };
-
-        return database;
+    request
+      .query(sql)
+      .then(res => {
+        console.log('Success');
+        console.log(res);
+        conn.close();
       })
-      .finally(() => this._infoSchemaDC.getQueryExecuter().getConnectionPool().end());
+      .catch(err => {
+        console.error('Error executing query.');
+        console.error(err);
+        conn.close();
+      });
   }
 }
 

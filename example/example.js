@@ -1,11 +1,29 @@
 'use strict';
 
+const mssql        = require('mssql');
 const ndm          = require('node-data-mapper');
-const Generator    = require('ndm-schema-generator').Generator;
-const infoSchemaDC = require('./infoSchemaDataContext');
+//const Generator    = require('ndm-schema-generator').Generator;
+const Generator    = require('../Generator');
 const util         = require('util');
+const settings     = {
+  user     : 'cpuc-pda-user',
+  password : 'U!2lVf$AvelTS*&Q',
+  server   : 'benningfieldgroup.com',
+  database : 'cpuc_stage'
+};
+const conn = mssql.connect(settings);
 
-let generator = new Generator(infoSchemaDC);
+conn
+  .then(function() {
+    console.log('connected');
+    console.log(arguments);
+  })
+  .catch(function(err) {
+    console.error('Error connecting to database.', err);
+  });
+
+//let   generator;
+
 
 /**
  * The table alias removes any underscores and uppercases the proceeding
@@ -28,8 +46,8 @@ function columnCB(col, table) {
     col.converter = ndm.bitConverter;
 }
 
-generator
+/*generator
   .generateSchema('bike_shop', tableCB, columnCB)
   .then((schema) => console.log(util.inspect(schema, {depth: null})))
-  .catch(console.error);
+  .catch(console.error);*/
 
