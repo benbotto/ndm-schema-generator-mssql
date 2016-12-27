@@ -3,7 +3,7 @@
 const deferred     = require('deferred');
 const mssql        = require('mssql');
 const ndm          = require('node-data-mapper');
-const Generator    = require('ndm-schema-generator').Generator;
+const Generator    = require('ndm-schema-generator-mssql');
 const util         = require('util');
 const settings     = {
   user     : 'bike-shop-user',

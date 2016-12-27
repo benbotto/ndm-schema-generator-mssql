@@ -69,9 +69,17 @@ class Generator {
             .addProperty('COLUMN_DEFAULT', 'defaultValue')
             .addProperty('isPrimary', 'isPrimary', ndm.bitConverter.onRetrieve));
 
-        const schema = new ndm.DataMapper().serialize(res, tblSchema);
+        const tables = new ndm.DataMapper().serialize(res, tblSchema);
 
-        return schema;
+        tables.forEach(function(table) {
+          tableCB(table);
+          table.columns.forEach(col => columnCB(col, table));
+        });
+
+        return {
+          name:   dbName,
+          tables: tables
+        };
       });
   }
 }
