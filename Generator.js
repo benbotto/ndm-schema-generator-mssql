@@ -19,6 +19,7 @@ class Generator {
    * Generate the schema from the database.
    * @param dbName The name of the database for which the schema should be
    *        generated.
+   * @param schema The schema (e.g. dbo).
    * @param tableCB A callback function(table) that is called with each
    *        table.  The function can be used to set the table alias or perform
    *        other table-level manipulation.
@@ -26,7 +27,7 @@ class Generator {
    *        each column.  The function can be used to set a column alias or
    *        add converters.
    */
-  generateSchema(dbName, tableCB, columnCB) {
+  generateSchema(dbName, schema, tableCB, columnCB) {
     tableCB  = tableCB  || function() {};
     columnCB = columnCB || function() {};
 
@@ -40,19 +41,25 @@ class Generator {
               END AS isPrimary
       FROM    INFORMATION_SCHEMA.TABLES t
       INNER JOIN INFORMATION_SCHEMA.COLUMNS c ON t.TABLE_NAME = c.TABLE_NAME
+        AND t.TABLE_CATALOG = c.TABLE_CATALOG
         AND t.TABLE_SCHEMA = c.TABLE_SCHEMA
       LEFT OUTER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS pri_tc ON t.TABLE_NAME = pri_tc.TABLE_NAME
         AND t.TABLE_CATALOG = pri_tc.TABLE_CATALOG
+        AND t.TABLE_SCHEMA = pri_tc.TABLE_SCHEMA
         AND pri_tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
       LEFT OUTER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE pri_ccu ON t.TABLE_NAME = pri_ccu.TABLE_NAME
         AND t.TABLE_CATALOG = pri_ccu.TABLE_CATALOG
+        AND t.TABLE_SCHEMA = pri_ccu.TABLE_SCHEMA
         AND pri_tc.CONSTRAINT_NAME = pri_ccu.CONSTRAINT_NAME
         AND pri_ccu.COLUMN_NAME = c.COLUMN_NAME
       WHERE   t.TABLE_CATALOG = @dbName
         AND   t.TABLE_TYPE = 'BASE TABLE'
+        AND   t.TABLE_SCHEMA = @schema
       ORDER BY t.TABLE_NAME`;
+
     const request = new mssql.Request();
     request.input('dbName', mssql.NVarChar, dbName);
+    request.input('schema', mssql.NVarChar, schema);
 
     // Run the query and serialize the results.
     // Note: deferred is used as the promise library.  Since mssql uses native
@@ -65,7 +72,8 @@ class Generator {
           .addSchema('columns', new ndm.Schema('COLUMN_NAME', 'name')
             .addProperty('DATA_TYPE', 'dataType')
             .addProperty('IS_NULLABLE', 'isNullable', val => val === 'YES')
-            .addProperty('CHARACTER_MAXIMUM_LENGTH', 'maxLength')
+            .addProperty('CHARACTER_MAXIMUM_LENGTH', 'maxLength',
+              val => val === -1 ? 2147483647 : val)
             .addProperty('COLUMN_DEFAULT', 'defaultValue')
             .addProperty('isPrimary', 'isPrimary', ndm.bitConverter.onRetrieve));
 
