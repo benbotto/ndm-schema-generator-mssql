@@ -64,7 +64,7 @@ class Generator {
           .addProperty('TABLE_SCHEMA', 'schema')
           .addSchema('columns', new ndm.Schema('COLUMN_NAME', 'name')
             .addProperty('DATA_TYPE', 'dataType')
-            .addProperty('IS_NULLABLE', 'isNullable', ndm.bitConverter.onRetrieve)
+            .addProperty('IS_NULLABLE', 'isNullable', val => val === 'YES')
             .addProperty('CHARACTER_MAXIMUM_LENGTH', 'maxLength')
             .addProperty('COLUMN_DEFAULT', 'defaultValue')
             .addProperty('isPrimary', 'isPrimary', ndm.bitConverter.onRetrieve));
