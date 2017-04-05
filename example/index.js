@@ -1,16 +1,15 @@
 'use strict';
 
-const mssql                   = require('../node_modules/mssql');
+const mssql                   = require('mssql');
 const deferred                = require('deferred');
-const ndm                     = require('../node_modules/node-data-mapper');
-const schemaGen               = require('../');
-//const schemaGen               = require('ndm-schema-generator-mssql');
+const ndm                     = require('node-data-mapper');
+const schemaGen               = require('ndm-schema-generator-mssql');
 const MSSQLSchemaGenerator    = schemaGen.MSSQLSchemaGenerator;
 const util                    = require('util');
 const settings                = {
   user     : 'example',
   password : 'secret',
-  server   : '10.0.9.177',
+  server   : 'localhost',
   database : 'bike_shop'
 };
 
