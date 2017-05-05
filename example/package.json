@@ -11,7 +11,7 @@
   "dependencies": {
     "deferred": "^0.7.5",
     "mssql": "^3.3.0",
-    "ndm-schema-generator-mssql": "^1.1.1",
-    "node-data-mapper": "^1.1.19"
+    "ndm-schema-generator-mssql": "^1.1.3",
+    "node-data-mapper": "^1.1.22"
   }
 }
