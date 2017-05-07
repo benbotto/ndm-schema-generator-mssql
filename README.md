@@ -1,3 +1,3 @@
 # ndm-schema-generator
 
-DEV BRANCH.  MSSQL support will be ready with the NDM 1.1.x branch.
+A tool to generate a database schema object for use with the [node-data-mapper](https://github.com/benbotto/node-data-mapper) project.  This is a low-level module used by the MSSQL driver for node data mapper.
