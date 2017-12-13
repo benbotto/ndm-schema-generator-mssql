@@ -9,8 +9,8 @@
   "author": "Ben Botto",
   "license": "ISC",
   "dependencies": {
-    "deferred": "^0.7.5",
-    "mssql": "^3.3.0",
-    "node-data-mapper": "^1.0.19"
+    "deferred": "0.7.x",
+    "mssql": "3.3.x",
+    "node-data-mapper": "1.0.x"
   }
 }
